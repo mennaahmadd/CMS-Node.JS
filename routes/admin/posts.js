@@ -31,11 +31,14 @@ router.get('/', (req, res)=>{
     //CALL THE DATA FROM THE DB 
     //lean IS TO SOLVE THE ISSUE OF HANDLEBARS NEW VERSION
     //posts is an array
-    Post.find({})
+    Post.find({}).maxTimeMS(20000)
     //POPULATE THE POST WITH THE CATEGORY SO THAT THE CATEGORY NAME CAN APPEAR INSTEAD OF THE ID
     .populate('category')
     .then(posts=>{
         res.render('admin/posts', {posts:posts});
+    }).catch(error => {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
     });
     // res.render('admin/posts');
 });
@@ -50,96 +53,176 @@ router.get('/my-posts', (req , res)=>{
 })
 
 
-router.get('/create', (req, res)=>{
-    Category.find({}).then(categories=>{
-        res.render('admin/posts/create', {categories: categories});
+// router.get('/create', (req, res)=>{
+//     Category.find({}).then(categories=>{
+//         res.render('admin/posts/create', {categories: categories});
 
-    });
-    // res.render('admin/posts/create');
+//     });
+//     // res.render('admin/posts/create');
+// });
+
+
+// router.post('/create', (req, res)=>{
+
+//     let errors = [];
+
+//     if(!req.body.title)
+//     {
+//         errors.push({message: 'PLEASE ADD A TITLE'});
+
+//     }
+//     if(!req.body.body)
+//     {
+//         errors.push({message: 'PLEASE ADD A BODY'});
+
+//     }
+//     if(errors.length > 0)
+//     {
+//         res.render('admin/posts/create' , {
+//             errors: errors
+//         })
+//     }
+//     else
+//     {
+//         let filename = 'M BARCODE.png';
+
+//         if(!isEmpty(req.files))
+//         {
+//             //MOVE THE FILE
+//             let file = req.files.file;
+//             filename = Date.now() + '-' + file.name;
+         
+//             file.mv('./public/uploads/'+ filename, (err)=>
+//             {
+//                 if(err) throw err;
+//             });
+//             // //TEST
+//             // console.log('IS NOT EMPTY');
+//         }
+//         // else{
+//         //     console.log('IS EMPTY');
+//         // }
+    
+//         // INIIALIZE TYPE OF VARIABLE HERE FOR THE CHECKBOX TO PREVENT THE ON AND UNDEFINED THING
+//         // CONVERTING ON AND OFF THAT WE ARE GETTING FROM CHECKBOX TO BOOLEAN VALUES
+        
+//         // TESTING IF UPLOADING FILE IS WORKING
+//         // console.log(req.files);
+    
+//         let allowComments = true;
+//         if(req.body.allowComments)
+//         {
+//             allowComments = true;
+//         }
+//         else
+//         {
+//             allowComments = false;
+//         }
+    
+//         //WE ARE SUPPOSED TO PARSE THE DATA AFTER RECIEVING IT
+//         //POST WILL TAKE AN OBJECT WHICH IS THE SCHEMA WE HAVE
+//         const newPost = new Post({
+//             user: req.user.id,
+//             title: req.body.title,
+//             status: req.body.status,
+//             allowComments: allowComments,
+//             body: req.body.body,
+//             category: req.body.category,
+//             file: filename
+//         });
+//         newPost.save().then(savedPost=>{
+//             //DO STH AFTER POST SAVED
+//             console.log(savedPost);
+//             //FLASH MESSAGE SET UP 
+//             req.flash('SUCCESS_MESSAGE', `POST ${savedPost.title} WAS CREATED SUCCESSFULLY`);
+//             res.redirect('/admin/posts');
+    
+//         }).catch(error=>{
+//             console.log(error, 'COULD NOT SAVE POST');
+//         });    
+
+//     }
+//     // console.log(req.body);
+// });
+
+//------------EVENT DRIVEN VERSION FOR CREATE-------------
+
+// GET route to render the create post form
+router.get('/create', async (req, res) => {
+    try {
+        // Fetch categories asynchronously
+        const categories = await Category.find({});
+        res.render('admin/posts/create', { categories });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
 });
 
+// POST route to handle form submission and create a new post
+router.post('/create', async (req, res) => {
+    try {
+        let errors = [];
 
-router.post('/create', (req, res)=>{
+        // Validate form data
+        if (!req.body.title) {
+            errors.push({ message: 'PLEASE ADD A TITLE' });
+        }
+        if (!req.body.body) {
+            errors.push({ message: 'PLEASE ADD A BODY' });
+        }
 
-    let errors = [];
+        if (errors.length > 0) {
+            // Render the form with error messages
+            res.render('admin/posts/create', { errors });
+        } else {
+            let filename = 'M BARCODE.png';
 
-    if(!req.body.title)
-    {
-        errors.push({message: 'PLEASE ADD A TITLE'});
+            // Check if a file is uploaded
+            if (!isEmpty(req.files)) {
+                let file = req.files.file;
+                filename = Date.now() + '-' + file.name;
 
-    }
-    if(!req.body.body)
-    {
-        errors.push({message: 'PLEASE ADD A BODY'});
+                // Move the file asynchronously
+                await new Promise((resolve, reject) => {
+                    file.mv('./public/uploads/' + filename, (err) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve();
+                        }
+                    });
+                });
+            }
 
-    }
-    if(errors.length > 0)
-    {
-        res.render('admin/posts/create' , {
-            errors: errors
-        })
-    }
-    else
-    {
-        let filename = 'M BARCODE.png';
+            // Determine the value of allowComments
+            let allowComments = req.body.allowComments === 'on';
 
-        if(!isEmpty(req.files))
-        {
-            //MOVE THE FILE
-            let file = req.files.file;
-            filename = Date.now() + '-' + file.name;
-         
-            file.mv('./public/uploads/'+ filename, (err)=>
-            {
-                if(err) throw err;
+            // Create a new Post object
+            const newPost = new Post({
+                user: req.user.id,
+                title: req.body.title,
+                status: req.body.status,
+                allowComments,
+                body: req.body.body,
+                category: req.body.category,
+                file: filename
             });
-            // //TEST
-            // console.log('IS NOT EMPTY');
-        }
-        // else{
-        //     console.log('IS EMPTY');
-        // }
-    
-        // INIIALIZE TYPE OF VARIABLE HERE FOR THE CHECKBOX TO PREVENT THE ON AND UNDEFINED THING
-        // CONVERTING ON AND OFF THAT WE ARE GETTING FROM CHECKBOX TO BOOLEAN VALUES
-        
-        // TESTING IF UPLOADING FILE IS WORKING
-        // console.log(req.files);
-    
-        let allowComments = true;
-        if(req.body.allowComments)
-        {
-            allowComments = true;
-        }
-        else
-        {
-            allowComments = false;
-        }
-    
-        //WE ARE SUPPOSED TO PARSE THE DATA AFTER RECIEVING IT
-        //POST WILL TAKE AN OBJECT WHICH IS THE SCHEMA WE HAVE
-        const newPost = new Post({
-            user: req.user.id,
-            title: req.body.title,
-            status: req.body.status,
-            allowComments: allowComments,
-            body: req.body.body,
-            category: req.body.category,
-            file: filename
-        });
-        newPost.save().then(savedPost=>{
-            //DO STH AFTER POST SAVED
+
+            // Save the post asynchronously
+            const savedPost = await newPost.save();
+
+            // Log the saved post
             console.log(savedPost);
-            //FLASH MESSAGE SET UP 
+
+            // Flash message setup
             req.flash('SUCCESS_MESSAGE', `POST ${savedPost.title} WAS CREATED SUCCESSFULLY`);
             res.redirect('/admin/posts');
-    
-        }).catch(error=>{
-            console.log(error, 'COULD NOT SAVE POST');
-        });    
-
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
     }
-    // console.log(req.body);
 });
 
 
