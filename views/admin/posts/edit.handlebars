@@ -1,0 +1,51 @@
+<h1>Edit Post</h1>
+
+<form action="/admin/posts/edit/{{post.id}}?_method=PUT" method="post" enctype="multipart/form-data" style="margin-top: 80px;">
+     <div class = "form-group">
+        <label for="title">Title</label>
+        <input name="title" type="text" class="form-control" id="title" value="{{post.title}}">
+     </div>
+     <div class = "form-group">
+        <label for="file">File Upload</label>
+        <input type="file" name= "file" class="form-control" >
+     </div>
+
+    <div class = "form-group">
+        <label for="status">Category</label>
+        <select name="category" class="form-control" id="status">
+            {{#select post.category}}
+            {{#each categories}}
+                <option value="{{id}}">{{name}}</option>
+            {{/each}}
+            {{/select}}
+        </select>
+    </div>
+
+     <div class = "form-group">
+        <label for="status">Status</label>
+        <select name="status" class="form-control" id="status">
+    {{#select post.status}}
+    {{!-- YOU WANT TO DYNAMICALLY PULL SELECTED SO YOU WRAP THE OPTIONS AROUND TTHE SELECT FUNC --}}
+            <option value="public">Public</option>
+            <option value="private">Private</option>
+            <option value="draft">Draft</option>
+        {{/select}}
+        </select>
+     </div>
+     {{!-- BETWEEN THOSE CURLY BRACKETS WE COULD ACCESS THE HANDLEBARS --}}
+     {{!-- WHATEVER INSIDE HERE WILL BE THE OBJECTS --}}
+
+    <div class = "form-check">
+        <label for="allowComments" class="form-check-label">
+            {{!-- IF IS A BUILT IN FUNCTION BUT WE CAN BUILD OUR OWN HELPER FUNCTIONS --}}
+        <input name="allowComments" type="checkbox" {{#if post.allowComments}} checked="checked" {{/if}} class="form-check-input" id="allowComments">
+            Allow Comments
+        </label>
+    </div>
+    <div class = "form-group">
+        <label for="body">Body</label>
+        <textarea name="body" cols="38" rows="10" class="form-control" id="body">{{post.body}}</textarea>
+    </div>
+
+     <button type="submit" class="btn btn-primary">Update Post</button>
+</form>

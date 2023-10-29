@@ -1,0 +1,48 @@
+<div style="margin-top: 100px;">
+<h1>ALL POSTS</h1>
+
+{{> home/form-msgs}}
+
+<table class="table table-bordered">
+
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>File</th>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Category</th>
+            <th>Allow Comments</th>
+            <th>VIEW POST</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{!-- each is like for each loop --}}
+        {{#each posts}}
+        <tr>
+            <td>{{_id}}</td>
+            <td><img height="50" src="/uploads/{{file}}" alt=""></td>
+            <td>{{title}}</td>
+            <td>{{status}}</td>
+            <td>{{category.name}}</td>
+            <td>{{allowComments}}</td>
+            <td><a href="/post/{{slug}}">VIEW</a></td>
+            {{!-- <td>{{date}}</td> --}}
+            <td>{{generateTime date 'MMMM Do YYYY'}}</td>
+            <td><a href="/admin/posts/edit/{{id}}" class="btn btn-info">Edit</a></td>
+            {{!-- LINK TO ALLOW US TO DELETE DATA --}}
+            <td>
+                <form action="/admin/posts/{{id}}?_method=DELETE" method="post">
+                    <button type="submit" class="btn btn-danger">DELETE</button>
+                </form>
+            </td>
+            {{!-- <td>Id</td>
+            <td>Title</td>
+            <td>Status</td>
+            <td>Allow Comments</td> --}}
+        </tr>
+        {{/each}}
+    </tbody>
+</table>
+</div>
